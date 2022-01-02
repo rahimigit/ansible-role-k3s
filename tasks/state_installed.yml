@@ -2,90 +2,38 @@
 
 - import_tasks: ensure_pre_configuration.yml
 
-<<<<<<< HEAD:tasks/state-installed.yml
-- import_tasks: teardown/drain-and-remove-nodes.yml
-
-- import_tasks: build/get-version.yml
-  when:
-    - k3s_release_version is not defined
-      or not k3s_release_version
-      or k3s_release_version is not regex('\\+k3s[1-9]$')
-    - not k3s_airgap
-
-- import_tasks: validate/main.yml
-  when: not k3s_skip_validation
-||||||| constructed merge base:tasks/state-installed.yml
-- import_tasks: teardown/drain-and-remove-nodes.yml
-
-- import_tasks: build/get-version.yml
-  when: k3s_release_version is not defined
-        or not k3s_release_version
-        or k3s_release_version is not regex('\\+k3s[1-9]$')
-
-- import_tasks: validate/main.yml
-  when: not k3s_skip_validation
-=======
 - import_tasks: ensure_drain_and_remove_nodes.yml
->>>>>>> wip:tasks/state_installed.yml
 
-- import_tasks: build/get-systemd-context.yml
+- import_tasks: determine_systemd_context.yml
 
 - name: Flush Handlers
   meta: flush_handlers
 
-- import_tasks: build/download-k3s.yml
-  when:
-    - not k3s_airgap
+- import_tasks: ensure_downloads.yml
+  when: not k3s_airgap
 
-- import_tasks: build/airgap-k3s.yml
-  when:
-    - k3s_airgap
+- import_tasks: ensure_uploads.yml
+  when: k3s_airgap
 
-- import_tasks: build/preconfigure-k3s-auto-deploying-manifests.yml
+- import_tasks: ensure_k3s_auto_deploy.yml
   when:
     - k3s_primary_control_node
-    - k3s_server_manifests_templates | length > 0
 
-- import_tasks: build/preconfigure-k3s-auto-deploying-manifests-urls.yml
-  when:
-    - k3s_primary_control_node
-    - k3s_server_manifests_urls | length > 0
+- import_tasks: ensure_k3s_config_files.yml
 
-- import_tasks: build/preconfigure-k3s-static-pod-manifests.yml
-  when:
-    - k3s_control_node
-    - k3s_server_pod_manifests_templates | length > 0
+- import_tasks: ensure_installed.yml
 
-- import_tasks: build/preconfigure-k3s-static-pod-manifests-urls.yml
-  when:
-    - k3s_control_node
-    - k3s_server_pod_manifests_urls | length > 0
-
-- import_tasks: build/preconfigure-k3s-server-config-yaml-d.yml
-  when:
-    - k3s_control_node
-    - k3s_server_config_yaml_d_files | length > 0
-
-- import_tasks: build/preconfigure-k3s-agent-config-yaml-d.yml
-  when:
-    - not k3s_control_node
-    - k3s_agent_config_yaml_d_files | length > 0
-
-- import_tasks: build/install-k3s.yml
-
-- name: Ensure containerd installation tasks are run
-  block:
-    - include_tasks: build/containerd/registries.yml
+- include_tasks: ensure_containerd_registries.yml
   when:
     - k3s_registries is defined
     - ('rootless' not in k3s_runtime_config or not k3s_runtime_config.rootless)
 
-- include_tasks: validate/configuration/cluster-init.yml
+- include_tasks: pre_checks_cluster.yml
   when:
     - k3s_control_delegate is defined
     - k3s_control_delegate == inventory_hostname
 
-- import_tasks: build/configure-k3s-cluster.yml
+- import_tasks: ensure_cluster.yml
   when:
     - k3s_build_cluster is defined
     - k3s_build_cluster

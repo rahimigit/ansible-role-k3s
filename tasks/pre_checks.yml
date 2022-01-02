@@ -39,10 +39,11 @@
     - not k3s_skip_env_checks
 
 - include_tasks: pre_checks_version.yml
-  when: k3s_release_version is not defined
+  when:
+    - (k3s_release_version is not defined
         or not k3s_release_version
-        or k3s_release_version is not regex('\\+k3s[1-9]$')
-        - not k3s_airgap
+        or k3s_release_version is not regex('\\+k3s[1-9]$'))
+    - not k3s_airgap
 
 - include_tasks: pre_checks_cgroups.yml
   loop: "{{ k3s_cgroup_subsys }}"
